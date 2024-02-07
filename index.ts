@@ -78,6 +78,8 @@ async function main() {
       Logger.log(`Failed to nuke on ${t.host}`, "error"); 
     }
   }
+
+  Logger.log("Nuke Done", "success");
 }
 
 main();
