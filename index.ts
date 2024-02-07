@@ -6,6 +6,7 @@ import { isHost } from "./lib/isHost.ts";
 import { getNotes } from "./misskey/getNotes/index.ts";
 import { createReply } from "./misskey/createReply/index.ts";
 import { config } from './config.ts';
+import { wait } from "./lib/wait.ts";
 
 Logger.log("Bootstrapping /Misskey Nuke/ ...", "success");
 Logger.log("Created by @amex2189", "success");
@@ -67,11 +68,11 @@ async function main() {
         } catch (_) {
           Logger.log(`Rate limit on ${t.host}`, "warn");
           Logger.log(`Waiting 5 seconds`, "error");
-          await new Promise((resolve) => setTimeout(resolve, 5000));  
+          await wait(5000);  
           continue;     
         }
 
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await wait(500);
       }
     }catch (_) {
       Logger.log(`Failed to nuke on ${t.host}`, "error"); 
