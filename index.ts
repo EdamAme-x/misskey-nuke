@@ -55,11 +55,11 @@ async function main() {
   
 
   const oneNuke = async () => {
-    for (const t of tokenList) {
+    await Promise.all(tokenList.map(async (t) => {
       Logger.log(`Nuking ${t.host} ...`, "warn");
       try {
         const notes = await getNotes(t.secret, t.host);
-        for (const note of notes) {
+        await Promise.all(notes.map(async (note: any) => {
           try {
             await createReply(t.secret, t.host, note.id, config.text.replace(
               "{{hash}}",
@@ -68,17 +68,16 @@ async function main() {
             Logger.log(`Nuked at ${note.id}`, "success");
           } catch (_) {
             Logger.log(`Rate limit on ${t.host}`, "warn");
-            Logger.log(`Waiting 5 seconds`, "error");
-            await wait(5000);  
-            continue;     
+            Logger.log(`Waiting 0.5 seconds`, "error");
+            await wait(500);  
           }
   
-          await wait(500);
-        }
-      }catch (_) {
+          await wait(300);
+        }));
+      } catch (_) {
         Logger.log(`Failed to nuke on ${t.host}`, "error"); 
       }
-    }
+    }));
   
     Logger.log("Nuke Task Done", "success");
     const continueQuery = createPrompt("Continue? (y/N)");
