@@ -54,32 +54,41 @@ async function main() {
   }
   
 
-  for (const t of tokenList) {
-    Logger.log(`Nuking ${t.host} ...`, "warn");
-    try {
-      const notes = await getNotes(t.secret, t.host);
-      for (const note of notes) {
-        try {
-          await createReply(t.secret, t.host, note.id, config.text.replace(
-            "{{hash}}",
-            btoa(note.id),
-          ));
-          Logger.log(`Nuked at ${note.id}`, "success");
-        } catch (_) {
-          Logger.log(`Rate limit on ${t.host}`, "warn");
-          Logger.log(`Waiting 5 seconds`, "error");
-          await wait(5000);  
-          continue;     
+  const oneNuke = async () => {
+    for (const t of tokenList) {
+      Logger.log(`Nuking ${t.host} ...`, "warn");
+      try {
+        const notes = await getNotes(t.secret, t.host);
+        for (const note of notes) {
+          try {
+            await createReply(t.secret, t.host, note.id, config.text.replace(
+              "{{hash}}",
+              btoa(note.id),
+            ));
+            Logger.log(`Nuked at ${note.id}`, "success");
+          } catch (_) {
+            Logger.log(`Rate limit on ${t.host}`, "warn");
+            Logger.log(`Waiting 5 seconds`, "error");
+            await wait(5000);  
+            continue;     
+          }
+  
+          await wait(500);
         }
-
-        await wait(500);
+      }catch (_) {
+        Logger.log(`Failed to nuke on ${t.host}`, "error"); 
       }
-    }catch (_) {
-      Logger.log(`Failed to nuke on ${t.host}`, "error"); 
+    }
+  
+    Logger.log("Nuke Task Done", "success");
+    const continueQuery = createPrompt("Continue? (y/N)");
+
+    if (continueQuery === "y") {
+      oneNuke();
     }
   }
 
-  Logger.log("Nuke Done", "success");
+  oneNuke();
 }
 
 main();
