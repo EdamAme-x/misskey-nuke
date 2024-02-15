@@ -1,10 +1,10 @@
 export const config = {
     text: `
 $[fg.color=f00 **荒らし共栄圏最強**]
-Twitterで荒らし共栄圏を今すぐツイート
+荒らし共栄圏を今すぐ友達に共有
+https://twitter.com/amex2189
 https://xn--68j5e377y.com
 https://xn--68j5e377y.com#Discord
-https://twitter.com/amex2189
 #荒らし共栄圏
 {{hash}}`
 }
