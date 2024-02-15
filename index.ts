@@ -53,37 +53,55 @@ async function main() {
     }
   }
   
+  // deno-lint-ignore no-explicit-any
+  const chunkArray = (arr: any[], size: number) => {
+    const chunks = [];
+    for (let i = 0; i < arr.length; i += size) {
+      chunks.push(arr.slice(i, i + size));
+    }
+    return chunks;
+  };
 
   const oneNuke = async () => {
-    await Promise.all(tokenList.map(async (t) => {
-      Logger.log(`Nuking ${t.host} ...`, "warn");
-      try {
-        const notes = await getNotes(t.secret, t.host);
-        await Promise.all(notes.map(async (note: any) => {
-          try {
-            await createReply(t.secret, t.host, note.id, config.text.replace(
-              "{{hash}}",
-              btoa(note.id),
-            ));
-            Logger.log(`Nuked at ${note.id}`, "success");
-          } catch (_) {
-            Logger.log(`Rate limit on ${t.host}`, "warn");
-            Logger.log(`Waiting 0.5 seconds`, "error");
-            await wait(500);  
-          }
-  
-          await wait(300);
-        }));
-      } catch (_) {
-        Logger.log(`Failed to nuke on ${t.host}`, "error"); 
-      }
-    }));
-  
-    Logger.log("Nuke Task Done", "success");
-    const continueQuery = createPrompt("Continue? (y/N)");
+    const nukeTokens = async (tokens: typeof tokenList) => {
+      await Promise.all(tokens.map(async (t) => {
+        Logger.log(`Nuking ${t.host} ...`, "warn");
+        try {
+          const notes = await getNotes(t.secret, t.host);
+          // deno-lint-ignore no-explicit-any
+          await Promise.all(notes.map(async (note: any) => {
+            try {
+              await createReply(t.secret, t.host, note.id, config.text.replace(
+                "{{hash}}",
+                btoa(note.id),
+              ));
+              Logger.log(`Nuked at https://${t.host}/notes/${note.id}`, "success");
+            } catch (_) {
+              Logger.log(`Rate limit on ${t.host}`, "warn");
+              Logger.log(`Waiting 0.5 seconds`, "error");
+              await wait(500);  
+            }
+    
+            await wait(100);
+          }));
+        } catch (_) {
+          Logger.log(`Failed to nuke on ${t.host}`, "error"); 
+        }
+      }));
+    };
 
-    if (continueQuery === "y") {
-      oneNuke();
+    const thread = 5;
+    const chunkedTokens = chunkArray(tokenList, thread);
+    let count = 0;
+
+    for (const chunk of chunkedTokens) {
+      nukeTokens(chunk).then(() => {
+        count++;
+        if (count === chunkedTokens.length) {
+          Logger.log("Nuke Task Done", "success");
+          wait(100).then(() => oneNuke());
+        }
+      });
     }
   }
 

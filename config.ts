@@ -1,6 +1,6 @@
 export const config = {
     text: `
-荒らし共栄圏最強
+$[fg.color=f00 **荒らし共栄圏最強**]
 Twitterで荒らし共栄圏を今すぐツイート
 https://xn--68j5e377y.com
 https://xn--68j5e377y.com#Discord
